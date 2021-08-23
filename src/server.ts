@@ -25,7 +25,8 @@ export class AtekRpcServer {
       try {
         const params = Array.isArray(parsed.payload.params) ? parsed.payload.params : []
         const apiRes = await this.handlers[parsed.payload.method](params)
-        return res.writeHead(200, {'Content-Type': 'application/json'}).end(JSON.stringify(jsonrpc.success(parsed.payload.id, apiRes)))
+        const rpcRes = jsonrpc.success(parsed.payload.id, apiRes || 0)
+        return res.writeHead(200, {'Content-Type': 'application/json'}).end(JSON.stringify(rpcRes))
       } catch (e) {
         const rpcErr = e instanceof jsonrpc.JsonRpcError ? e : new jsonrpc.JsonRpcError(e.message || e.toString(), e.code || -32000, e.data)
         return res.writeHead(200, {'Content-Type': 'application/json'}).end(JSON.stringify(jsonrpc.error(parsed.payload.id, rpcErr)))
