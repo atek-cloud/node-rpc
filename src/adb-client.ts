@@ -2,13 +2,13 @@ import { AtekRpcClient } from './client.js'
 
 export class AtekDbRecordClient<T extends object> {
   api: AtekDbApiClient
-  dbId: string
+  dbId: string|undefined
   tableId: string
   revision: number|undefined
   templates: any
   schema: any
   
-  constructor (api: AtekDbApiClient, dbId: string, tableId: string, revision: number|undefined, templates: TableTemplates, schema: any) {
+  constructor (api: AtekDbApiClient, dbId: string|undefined, tableId: string, revision: number|undefined, templates: TableTemplates, schema: any) {
     this.api = api
     this.dbId = dbId
     this.tableId = tableId
@@ -17,7 +17,12 @@ export class AtekDbRecordClient<T extends object> {
     this.schema = schema
   }
 
+  bindDb (dbId: string) {
+    this.dbId = dbId
+  }
+
   async register () {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     await this.api.table(this.dbId, this.tableId, {
       revision: this.revision,
       templates: this.templates,
@@ -26,38 +31,47 @@ export class AtekDbRecordClient<T extends object> {
   }
 
   list (opts?: ListOpts): Promise<{records: Record<T>[]}> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.list(this.dbId, this.tableId, opts) as Promise<{records: Record<T>[]}>
   }
 
   get (key: string): Promise<Record<T>> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.get(this.dbId, this.tableId, key) as Promise<Record<T>>
   }
 
   create (value: object, blobs?: BlobMap): Promise<Record<T>> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.create(this.dbId, this.tableId, value, blobs) as Promise<Record<T>>
   }
 
   put (key: string, value: object): Promise<Record<T>> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.put(this.dbId, this.tableId, key, value) as Promise<Record<T>>
   }
   
   delete (key: string): Promise<void> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.delete(this.dbId, this.tableId, key)
   }
   
   diff (opts: {left: number, right?: number}): Promise<Diff[]> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.diff(this.dbId, {left: opts.left, right: opts.right, tableIds: [this.tableId]})
   }
 
   getBlob (key: string, blobName: string): Promise<Blob> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.getBlob(this.dbId, this.tableId, key, blobName)
   }
   
   putBlob (key: string, blobName: string, blobValue: BlobDesc): Promise<void> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.putBlob(this.dbId, this.tableId, key, blobName, blobValue)
   }
   
   delBlob (key: string, blobName: string): Promise<void> {
+    if (typeof this.dbId !== 'string') throw new Error('No database bound')
     return this.api.delBlob(this.dbId, this.tableId, key, blobName)
   }
 }
