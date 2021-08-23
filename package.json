@@ -16,6 +16,7 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
+    "@atek-cloud/api-broker": "^0.0.1",
     "ajv": "^8.6.2",
     "ajv-formats": "^2.1.1",
     "jsonrpc-lite": "^2.2.0",
