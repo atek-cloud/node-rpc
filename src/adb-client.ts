@@ -2,61 +2,63 @@ import { AtekRpcClient } from './client.js'
 
 export class AtekDbRecordClient<T extends object> {
   api: AtekDbApiClient
+  dbId: string
   tableId: string
   revision: number|undefined
   templates: any
   schema: any
   
-  constructor (api: AtekDbApiClient, tableId: string, revision: number|undefined, templates: TableTemplates, schema: any) {
+  constructor (api: AtekDbApiClient, dbId: string, tableId: string, revision: number|undefined, templates: TableTemplates, schema: any) {
     this.api = api
+    this.dbId = dbId
     this.tableId = tableId
     this.revision = revision
     this.templates = templates
     this.schema = schema
   }
 
-  async register (dbId: string) {
-    await this.api.table(dbId, this.tableId, {
+  async register () {
+    await this.api.table(this.dbId, this.tableId, {
       revision: this.revision,
       templates: this.templates,
       definition: this.schema
     })
   }
 
-  list (dbId: string, opts?: ListOpts): Promise<{records: Record<T>[]}> {
-    return this.api.list(dbId, this.tableId, opts) as Promise<{records: Record<T>[]}>
+  list (opts?: ListOpts): Promise<{records: Record<T>[]}> {
+    return this.api.list(this.dbId, this.tableId, opts) as Promise<{records: Record<T>[]}>
   }
 
-  get (dbId: string, key: string): Promise<Record<T>> {
-    return this.api.get(dbId, this.tableId, key) as Promise<Record<T>>
+  get (key: string): Promise<Record<T>> {
+    return this.api.get(this.dbId, this.tableId, key) as Promise<Record<T>>
   }
 
-  create (dbId: string, value: object, blobs?: BlobMap): Promise<Record<T>> {
-    return this.api.create(dbId, this.tableId, value, blobs) as Promise<Record<T>>
+  create (value: object, blobs?: BlobMap): Promise<Record<T>> {
+    return this.api.create(this.dbId, this.tableId, value, blobs) as Promise<Record<T>>
   }
 
-  put (dbId: string, key: string, value: object): Promise<Record<T>> {
-    return this.api.put(dbId, this.tableId, key, value) as Promise<Record<T>>
+  put (key: string, value: object): Promise<Record<T>> {
+    return this.api.put(this.dbId, this.tableId, key, value) as Promise<Record<T>>
   }
   
-  delete (dbId: string, key: string): Promise<void> {
-    return this.api.delete(dbId, this.tableId, key)
+  delete (key: string): Promise<void> {
+    return this.api.delete(this.dbId, this.tableId, key)
   }
   
-  diff (dbId: string, opts: {left: number, right?: number}): Promise<Diff[]> {
-    return this.api.diff(dbId, {left: opts.left, right: opts.right, tableIds: [this.tableId]})
+  diff (opts: {left: number, right?: number}): Promise<Diff[]> {
+    return this.api.diff(this.dbId, {left: opts.left, right: opts.right, tableIds: [this.tableId]})
   }
 
-  getBlob (dbId: string, key: string, blobName: string): Promise<Blob> {
-    return this.api.getBlob(dbId, this.tableId, key, blobName)
+  getBlob (key: string, blobName: string): Promise<Blob> {
+    return this.api.getBlob(this.dbId, this.tableId, key, blobName)
   }
   
-  putBlob (dbId: string, key: string, blobName: string, blobValue: BlobDesc): Promise<void> {
-    return this.api.putBlob(dbId, this.tableId, key, blobName, blobValue)
+  putBlob (key: string, blobName: string, blobValue: BlobDesc): Promise<void> {
+    return this.api.putBlob(this.dbId, this.tableId, key, blobName, blobValue)
   }
   
-  delBlob (dbId: string, key: string, blobName: string): Promise<void> {
-    return this.api.delBlob(dbId, this.tableId, key, blobName)
+  delBlob (key: string, blobName: string): Promise<void> {
+    return this.api.delBlob(this.dbId, this.tableId, key, blobName)
   }
 }
 
