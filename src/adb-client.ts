@@ -116,7 +116,7 @@ export interface Record<T = object> {
   path: string
   url: string
   seq?: number
-  value: T | null | undefined
+  value: T
 }
 
 export interface BlobMap {
