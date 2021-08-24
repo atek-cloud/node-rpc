@@ -10,13 +10,13 @@ interface ApiDesc {
   [key: string]: string
 }
 
-export function getUrl (desc: ApiDesc, proto = 'http')  {
+export function getUrl (desc: ApiDesc, proto = 'http', hostname = 'localhost', port = ATEK_HOST_PORT)  {
   const qp = (new URLSearchParams(desc)).toString()
-  return `${proto}://localhost:${ATEK_HOST_PORT}/_api/gateway?${qp}`
+  return `${proto}://${hostname}:${port}/_api/gateway?${qp}`
 }
 
-export function createWsProxy (desc: ApiDesc) {
-  return websocket(getUrl(desc, 'ws'))
+export function createWsProxy (desc: ApiDesc, proto = 'ws', hostname = 'localhost', port: number = ATEK_HOST_PORT) {
+  return websocket(getUrl(desc, proto, hostname, port))
 }
 
 let _id = 1
@@ -31,6 +31,12 @@ export class AtekRpcClient {
     this._schema = schema
     this._exportMap = exportMap
     this._url = getUrl({api: apiId})
+  }
+
+  $setEndpoint (opts: {desc?: ApiDesc, proto?: string, hostname?: string, port?: number}) {
+    opts.desc = opts.desc || {}
+    if (!opts.desc.api) opts.desc.api = this._apiId
+    this._url = getUrl(opts.desc, opts.proto, opts.hostname, opts.port)
   }
 
   async _rpc (methodName: string, params: any[] = []): Promise<any> {
