@@ -12,7 +12,7 @@ export class AtekRpcServer {
   exportMap: ExportMap|undefined
   handlers: AtekRpcServerHandlers
 
-  constructor (schema: SomeJSONSchema|undefined, exportMap: ExportMap|undefined, handlers: AtekRpcServerHandlers) {
+  constructor (handlers: AtekRpcServerHandlers, schema: SomeJSONSchema|undefined, exportMap: ExportMap|undefined) {
     this.schema = schema
     this.ajv = schema ? compileSchema(schema) : undefined
     this.exportMap = exportMap

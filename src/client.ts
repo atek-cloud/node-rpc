@@ -20,22 +20,22 @@ export function createWsProxy (desc: ApiDesc, proto = 'ws', hostname = 'localhos
 
 let _id = 1
 export class AtekRpcClient {
-  _url: string
-  _apiId: string
+  $url: string
+  $apiId: string
 
   constructor (apiId: string) {
-    this._apiId = apiId
-    this._url = getUrl({api: apiId})
+    this.$apiId = apiId
+    this.$url = getUrl({api: apiId})
   }
 
   $setEndpoint (opts: {desc?: ApiDesc, proto?: string, hostname?: string, port?: number}) {
     opts.desc = opts.desc || {}
-    if (!opts.desc.api) opts.desc.api = this._apiId
-    this._url = getUrl(opts.desc, opts.proto, opts.hostname, opts.port)
+    if (!opts.desc.api) opts.desc.api = this.$apiId
+    this.$url = getUrl(opts.desc, opts.proto, opts.hostname, opts.port)
   }
 
-  async _rpc (methodName: string, params: any[] = []): Promise<any> {
-    const responseBody = await (await fetch(this._url, {
+  async $rpc (methodName: string, params: any[] = []): Promise<any> {
+    const responseBody = await (await fetch(this.$url, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(jsonrpc.request(_id++, methodName, removeUndefinedsAtEndOfArray(params)))
@@ -48,7 +48,7 @@ export class AtekRpcClient {
     }
   }
 
-  _subscribe (params: any[] = []): any {
+  $subscribe (params: any[] = []): any {
     // TODO
     return undefined
   }
