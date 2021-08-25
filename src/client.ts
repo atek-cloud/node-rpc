@@ -1,4 +1,3 @@
-import { SomeJSONSchema, ExportMap, getMethod, assertParamsValid, assertResponseValid } from '@atek-cloud/api-broker'
 import websocket from 'websocket-stream'
 import { URLSearchParams } from 'url'
 import fetch from 'node-fetch'
@@ -23,13 +22,9 @@ let _id = 1
 export class AtekRpcClient {
   _url: string
   _apiId: string
-  _schema: SomeJSONSchema
-  _exportMap: ExportMap
 
-  constructor (apiId: string, schema: SomeJSONSchema, exportMap: ExportMap) {
+  constructor (apiId: string) {
     this._apiId = apiId
-    this._schema = schema
-    this._exportMap = exportMap
     this._url = getUrl({api: apiId})
   }
 
@@ -40,20 +35,15 @@ export class AtekRpcClient {
   }
 
   async _rpc (methodName: string, params: any[] = []): Promise<any> {
-    const methodDef = getMethod(this._schema, this._exportMap, methodName)
-    // if (methodDef.params) assertParamsValid(methodDef.params, params) TODO
-    // else if (params.length) throw new Error(`Invalid parameter: ${methodName} takes no arguments`)
     const responseBody = await (await fetch(this._url, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(jsonrpc.request(_id++, methodName, params))
+      body: JSON.stringify(jsonrpc.request(_id++, methodName, removeUndefinedsAtEndOfArray(params)))
     })).json()
     const parsed = jsonrpc.parseObject(responseBody)
     if (parsed.type === 'error') {
       throw parsed.payload.error
     } else if (parsed.type === 'success') {
-      // if (methodDef.response) assertResponseValid(methodDef.response, response) TODO
-      // else if (typeof response !== 'undefined') throw new Error(`Invalid response: ${methodName} has no response`)
       return parsed.payload.result
     }
   }
@@ -62,4 +52,13 @@ export class AtekRpcClient {
     // TODO
     return undefined
   }
+}
+
+function removeUndefinedsAtEndOfArray (arr: any[]) {
+  let len = arr.length
+  for (let i = len - 1; i >= 0; i--) {
+    if (typeof arr[i] === 'undefined') len--
+    else break
+  }
+  return arr.slice(0, len)
 }

@@ -1,5 +1,5 @@
 import http from 'http'
-import { SomeJSONSchema, ExportMap, getMethod, assertParamsValid, assertResponseValid, ParamValidationError, ResponseValidationError, GeneralError } from '@atek-cloud/api-broker'
+import { SomeJSONSchema, ExportMap, Ajv, compileSchema, getMethod, assertParamsValid, assertResponseValid, ParamValidationError, ResponseValidationError, GeneralError } from '@atek-cloud/api-broker'
 import * as jsonrpc from 'jsonrpc-lite'
 
 export type AtekRpcServerHandlers = {
@@ -7,14 +7,16 @@ export type AtekRpcServerHandlers = {
 }
 
 export class AtekRpcServer {
-  schema: SomeJSONSchema
-  exportMap: ExportMap
+  schema: SomeJSONSchema|undefined
+  ajv: Ajv|undefined
+  exportMap: ExportMap|undefined
   handlers: AtekRpcServerHandlers
 
-  constructor (schema: SomeJSONSchema, exportMap: ExportMap, handlers: AtekRpcServerHandlers) {
+  constructor (schema: SomeJSONSchema|undefined, exportMap: ExportMap|undefined, handlers: AtekRpcServerHandlers) {
     this.schema = schema
+    this.ajv = schema ? compileSchema(schema) : undefined
     this.exportMap = exportMap
-    this.handlers = generateServerMethods(schema, exportMap, handlers)
+    this.handlers = generateServerMethods(this.ajv, exportMap, handlers)
   }
 
   async handle (req: http.IncomingMessage, res: http.ServerResponse, body: object) {
@@ -38,19 +40,20 @@ export class AtekRpcServer {
   }
 }
 
-function generateServerMethods (schema: SomeJSONSchema, exportMap: ExportMap, handlers: AtekRpcServerHandlers): AtekRpcServerHandlers {
+function generateServerMethods (ajv: Ajv|undefined, exportMap: ExportMap|undefined, handlers: AtekRpcServerHandlers): AtekRpcServerHandlers {
   const methods: AtekRpcServerHandlers = {}
 
   for (const methodName in handlers) {
-    const methodDef = getMethod(schema, exportMap, methodName)
+    const methodDef = ajv && exportMap ? getMethod(ajv, exportMap, methodName) : undefined
 
     methods[methodName] = async (params: any[]): Promise<any> => {
+      let response
       try {
-        // if (methodDef.params) assertParamsValid(methodDef.params, params) TODO
-        // else if (params.length) throw new Error(`Invalid parameter: ${methodName} takes no arguments`)
-        const response = await handlers[methodName](...params)
-        // if (methodDef.response) assertResponseValid(methodDef.response, response) TODO
-        // else if (typeof response !== 'undefined') throw new Error(`Invalid response: ${methodName} has no response`)
+        if (methodDef?.params) assertParamsValid(methodDef.params, params)
+        else if (params.length) throw new ParamValidationError(`Invalid parameter: ${methodName} takes no arguments`)
+        response = await handlers[methodName](...params)
+        if (typeof response === 'undefined') response = null
+        if (methodDef?.returns) assertResponseValid(methodDef.returns, response)
         return response
       } catch (e) {
         if (e instanceof ParamValidationError) throw e
