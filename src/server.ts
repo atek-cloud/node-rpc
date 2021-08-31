@@ -50,7 +50,7 @@ function generateServerMethods (ajv: Ajv|undefined, exportMap: ExportMap|undefin
       let response
       try {
         if (methodDef?.params) assertParamsValid(methodDef.params, params)
-        else if (params.length) throw new ParamValidationError(`Invalid parameter: ${methodName} takes no arguments`)
+        else if (methodDef && params.length) throw new ParamValidationError(`Invalid parameter: ${methodName} takes no arguments`)
         response = await handlers[methodName](...params)
         if (typeof response === 'undefined') response = null
         if (methodDef?.returns) assertResponseValid(methodDef.returns, response)
