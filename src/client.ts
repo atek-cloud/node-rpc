@@ -11,7 +11,7 @@ interface ApiDesc {
 
 export function getUrl (desc: ApiDesc, proto = 'http', hostname = 'localhost', port = ATEK_HOST_PORT)  {
   const qp = (new URLSearchParams(desc)).toString()
-  return `${proto}://${hostname}:${port}/_api/gateway?${qp}`
+  return `${proto}://${hostname}:${port}/_atek/gateway?${qp}`
 }
 
 export function createWsProxy (desc: ApiDesc, proto = 'ws', hostname = 'localhost', port: number = ATEK_HOST_PORT) {
