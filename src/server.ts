@@ -33,6 +33,9 @@ export class AtekRpcServer {
     } else if (parsed.type === 'request') {
       try {
         const params = Array.isArray(parsed.payload.params) ? parsed.payload.params : []
+        if (!(parsed.payload.method in this.handlers)) {
+          throw new jsonrpc.JsonRpcError(`Method not found: ${parsed.payload.method}`, -32601)
+        }
         let apiRes = await this.handlers[parsed.payload.method](params)
         if (typeof apiRes === 'undefined') apiRes = 0
         const rpcRes = jsonrpc.success(parsed.payload.id, apiRes)

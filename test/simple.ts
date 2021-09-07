@@ -23,3 +23,10 @@ test('Call hello', async t => {
   const res1 = await api.hello('world')
   t.is(res1.value, 'Hello world')
 })
+
+test('Method not found', async t => {
+    const api = rpc('example.com/my-api')
+  api.$setEndpoint({port: 12345})
+  const err = await t.throwsAsync(() => api.notReal())
+  t.is(err.message, 'Method not found: notReal')
+})

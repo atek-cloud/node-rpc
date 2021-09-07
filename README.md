@@ -198,7 +198,7 @@ export function createMyApiServer (handlers) {
   })
 }
 
-export default inst = myApi()
+export default myApi()
 ```
 
 Here's how a client can use this:
