@@ -54,6 +54,24 @@ app.post('/_api/my-api', (req, res) => myApiServer.handle(req, res, req.body))
 app.listen(PORT)
 ```
 
+### Request context
+
+You can access the request, response, and body (which are passed by you into `handle()`) from the `this` of any method handler.
+
+```javascript
+import { createRpcServer } from '@atek-cloud/node-rpc'
+
+const myApiServer = createRpcServer({
+  someFn () {
+    // this.req - The request object
+    // this.res - The response object
+    // this.body - The body object
+  }
+})
+```
+
+This is particularly useful for handling authentication information which is passed by headers.
+
 ## Validation and types
 
 If you would like to add validation to your server, you can pass an object as the second parameter to the constructor which defines the expected params and responses:

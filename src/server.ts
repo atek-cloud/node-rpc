@@ -3,7 +3,11 @@ import { ajv, assertParamsValid, assertResponseValid, ParamValidationError, Resp
 import * as jsonrpc from 'jsonrpc-lite'
 
 export type AtekRpcServerHandlers = {
-  [key: string]: (...params: any[]) => any
+  [key: string]: any//(...params: any[]) => any
+}
+
+type AtekRpcServerGeneratedHandlers = {
+  [key: string]: (ctx: object, ...params: any[]) => any
 }
 
 export interface AtekRpcServerValidators {
@@ -18,7 +22,7 @@ export function createRpcServer (handlers: AtekRpcServerHandlers, validators?: A
 }
 
 export class AtekRpcServer {
-  handlers: AtekRpcServerHandlers
+  handlers: AtekRpcServerGeneratedHandlers
   validators: AtekRpcServerValidators|undefined
 
   constructor (handlers: AtekRpcServerHandlers, validators: AtekRpcServerValidators|undefined) {
@@ -36,7 +40,8 @@ export class AtekRpcServer {
         if (!(parsed.payload.method in this.handlers)) {
           throw new jsonrpc.JsonRpcError(`Method not found: ${parsed.payload.method}`, -32601)
         }
-        let apiRes = await this.handlers[parsed.payload.method](params)
+        const ctx = {req, res, body}
+        let apiRes = await this.handlers[parsed.payload.method](ctx, params)
         if (typeof apiRes === 'undefined') apiRes = 0
         const rpcRes = jsonrpc.success(parsed.payload.id, apiRes)
         return res.writeHead(200, {'Content-Type': 'application/json'}).end(JSON.stringify(rpcRes))
@@ -60,11 +65,11 @@ function generateServerMethods (handlers: AtekRpcServerHandlers, validators: Ate
     const methodResponse = methodDef?.response ? getSchemas(methodDef?.response) : undefined
     const methodResponseValidate = methodResponse ? ajv.compile(methodResponse) : undefined
 
-    methods[methodName] = async (params: any[]): Promise<any> => {
+    methods[methodName] = async function (ctx: object, params: any[]): Promise<any> {
       let response
       try {
         if (methodParamsValidate) assertParamsValid(methodParamsValidate, params)
-        response = await handlers[methodName](...params)
+        response = await handlers[methodName].apply(ctx, params)
         if (typeof response === 'undefined') response = null
         if (methodResponseValidate) assertResponseValid(methodResponseValidate, response)
         return response

@@ -7,8 +7,17 @@ let rpcServer: AtekRpcServer
 let httpServer: http.Server
 test.before(async () => {
   rpcServer = createRpcServer({
-    hello (who: string) {
-      return {value: `Hello ${who}`}
+    getReqPath () {
+      return this.req.url
+    },
+    hasReq () {
+      return !!this.req
+    },
+    hasRes () {
+      return !!this.res
+    },
+    hasBody () {
+      return !!this.body
     }
   })
   httpServer = await createServer(12345, rpcServer.handle.bind(rpcServer))
@@ -17,16 +26,12 @@ test.after(async () => {
   await httpServer.close()
 })
 
-test('Call hello', async t => {
+test('Has access to context', async t => {
   const api = rpc('example.com/my-api')
   api.$setEndpoint({port: 12345})
-  const res1 = await api.hello('world')
-  t.is(res1.value, 'Hello world')
-})
-
-test('Method not found', async t => {
-  const api = rpc('example.com/my-api')
-  api.$setEndpoint({port: 12345})
-  const err = await t.throwsAsync(() => api.notReal())
-  t.is(err.message, 'Method not found: notReal')
+  const res1 = await api.getReqPath()
+  t.is(typeof res1, 'string')
+  t.truthy(await api.hasReq())
+  t.truthy(await api.hasRes())
+  t.truthy(await api.hasBody())
 })
