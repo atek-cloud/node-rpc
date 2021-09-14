@@ -10,6 +10,9 @@ test.before(async () => {
     getReqPath () {
       return this.req.url
     },
+    getAuth () {
+      return this.req.headers.authorization
+    },
     hasReq () {
       return !!this.req
     },
@@ -34,4 +37,11 @@ test('Has access to context', async t => {
   t.truthy(await api.hasReq())
   t.truthy(await api.hasRes())
   t.truthy(await api.hasBody())
+})
+
+test('Authorization', async t => {
+  const api = rpc('example.com/my-api')
+  api.$setEndpoint({port: 12345})
+  api.$setAuthHeader('Bearer hi')
+  t.is(await api.getAuth(), 'Bearer hi')
 })

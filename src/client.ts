@@ -5,6 +5,7 @@ import * as jsonrpc from 'jsonrpc-lite'
 import { RpcError } from './types.js'
 
 const ATEK_HOST_PORT: number = Number(process.env.ATEK_HOST_PORT) || 0
+const ATEK_HOST_BEARER_TOKEN = process.env.ATEK_HOST_BEARER_TOKEN || undefined
 
 interface ApiDesc {
   [key: string]: string
@@ -31,10 +32,14 @@ export function rpc<T = UnknownApi>(desc: string|ApiDesc, proto = 'http', hostna
     get (obj: object, name: string) {
       if (name === '$setEndpoint') {
         return client.$setEndpoint.bind(client)
+      } else if (name === '$setAuthHeader') {
+        return client.$setAuthHeader.bind(client)
       } else if (name === '$rpc') {
         return client.$rpc.bind(client)
       } else if (name === '$url') {
         return client.$url
+      } else if (name === '$auth') {
+        return client.$auth
       } else if (name === '$desc') {
         return client.$desc
       } else {
@@ -48,20 +53,29 @@ let _id = 1
 export class AtekRpcClient {
   $url: string
   $desc: ApiDesc
+  $auth: string
 
   constructor (desc: ApiDesc, proto = 'http', hostname = 'localhost', port = ATEK_HOST_PORT) {
     this.$desc = desc
     this.$url = getUrl(desc, proto, hostname, port)
+    this.$auth = `Bearer ${ATEK_HOST_BEARER_TOKEN}`
   }
 
   $setEndpoint (opts: {proto?: string, hostname?: string, port?: number}) {
     this.$url = getUrl(this.$desc, opts.proto, opts.hostname, opts.port)
   }
 
+  $setAuthHeader (auth: string) {
+    this.$auth = auth
+  }
+
   async $rpc (methodName: string, params: any[] = []): Promise<any> {
     const responseBody = await (await fetch(this.$url, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Authorization': this.$auth,
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(jsonrpc.request(_id++, methodName, removeUndefinedsAtEndOfArray(params)))
     })).json()
     const parsed = jsonrpc.parseObject(responseBody)

@@ -257,6 +257,8 @@ const myApi = client('example.com/my-api')
 myApi.$setEndpoint('http://localhost:1234/_api')
 ```
 
+The API gateway also requires an authorization header. You can change the header with `$setAuthHeader()`
+
 ## API
 
 ### `rpc(apiDesc: string|object, proto = 'http', hostname = 'localhost', port = ATEK_HOST_PORT)`
@@ -285,6 +287,10 @@ Construct an endpoint URL.
 
 Set the endpoint for an rpc client.
 
+### `rpcClient.$setAuthHeader(auth: string)`
+
+Set the auth header for an rpc client.
+
 ### `rpcClient.$url`
 
 The current endpoint URL of a client.
@@ -292,6 +298,10 @@ The current endpoint URL of a client.
 ### `rpcClient.$desc`
 
 The current api description/metadata of a client, used by atek to route the request.
+
+### `rpcClient.$auth`
+
+The current auth header.
 
 ### `rpcClient.$rpc(methodName: string, params: any[] = []): Promise<any>`
 
